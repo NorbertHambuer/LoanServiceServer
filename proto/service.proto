@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package main;//???
+
+service LoanService{
+  rpc LoginClient(UserCredentials) returns (Client){}
+  rpc RegisterClient(UserRegisterCredentials) returns (Client){}
+  rpc RequestAmount(LoanRequest) returns (LoanInfo){}
+  rpc CheckClientStatus(Client) returns (LoanInfo){}
+  rpc PayLoan(Client) returns (OperationMsg){}
+}
+
+message Client{
+  int32 id = 1;
+  string name = 2;
+  int32 amount = 3;
+  int64 payDay = 4;
+}
+
+message UserCredentials{
+  string name = 1;
+  string password = 2;
+}
+
+message UserRegisterCredentials{
+  string name = 1;
+  string password = 2;
+  string confiredPassword = 3;
+}
+
+message LoanRequest{
+  int32 clientId = 1;
+  int32 amount = 2;
+}
+
+message LoanInfo{
+  int32 id = 1;
+  int32 amount = 2;
+  int64 payDay = 3;
+}
+
+message OperationMsg{
+  string msg = 1;
+}
