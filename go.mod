@@ -1,4 +1,4 @@
-module LoanServiceServer
+module github.com/norby7/LoanServiceServer
 
 go 1.13
 
