@@ -1,13 +1,13 @@
 package main
 
 import (
-	"LoanServiceServer/proto"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/norby7/LoanServiceServer/proto"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -38,16 +38,15 @@ type Loan struct {
 	PayDay time.Time
 }
 
-type LoanServer struct{
-
+type LoanServer struct {
 }
 
-func (s *LoanServer) LoginClient (ctx context.Context, userCredentials *proto.UserCredentials) (*proto.Client, error){
+func (s *LoanServer) LoginClient(ctx context.Context, userCredentials *proto.UserCredentials) (*proto.Client, error) {
 	var user User
 	var client proto.Client
 	conn.First(&user, "name = ?", userCredentials.Name)
 
-	if user.Password == userCredentials.Password{
+	if user.Password == userCredentials.Password {
 		var loan Loan
 		conn.First(&loan, "userid = ?", user.ID)
 
@@ -61,10 +60,10 @@ func (s *LoanServer) LoginClient (ctx context.Context, userCredentials *proto.Us
 	return &client, errors.New("invalid username/password")
 }
 
-func (s *LoanServer) RegisterClient(ctx context.Context, userRegisterCredentials *proto.UserRegisterCredentials) (*proto.Client, error){
+func (s *LoanServer) RegisterClient(ctx context.Context, userRegisterCredentials *proto.UserRegisterCredentials) (*proto.Client, error) {
 	var user User
 	var client proto.Client
-	if conn.First(&user,  "name = ?", userRegisterCredentials.Name).RecordNotFound(){
+	if conn.First(&user, "name = ?", userRegisterCredentials.Name).RecordNotFound() {
 		conn.Create(&User{
 			Name:     userRegisterCredentials.Name,
 			Password: userRegisterCredentials.Password,
@@ -79,40 +78,40 @@ func (s *LoanServer) RegisterClient(ctx context.Context, userRegisterCredentials
 	return &client, errors.New("username already exists")
 }
 
-func (s *LoanServer) RequestAmount(ctx context.Context, loanRequest *proto.LoanRequest) (*proto.LoanInfo, error){
+func (s *LoanServer) RequestAmount(ctx context.Context, loanRequest *proto.LoanRequest) (*proto.LoanInfo, error) {
 	var loan Loan
-	if conn.First(&loan, "user_id = ?", loanRequest.ClientId).RecordNotFound(){
+	if conn.First(&loan, "user_id = ?", loanRequest.ClientId).RecordNotFound() {
 		conn.Create(&Loan{
 			Amount: int(loanRequest.Amount),
 			UserId: int(loanRequest.ClientId),
-			PayDay: time.Now().AddDate(1,0,0),
+			PayDay: time.Now().AddDate(1, 0, 0),
 		}).Scan(&loan)
 
 		return &proto.LoanInfo{
-			Id:                   int32(loan.ID),
-			Amount:               loanRequest.Amount,
-			PayDay:               time.Now().AddDate(1,0,0).Unix(),
+			Id:     int32(loan.ID),
+			Amount: loanRequest.Amount,
+			PayDay: time.Now().AddDate(1, 0, 0).Unix(),
 		}, nil
 	}
 
 	return &proto.LoanInfo{}, errors.New("user already has an active loan")
 }
 
-func (s *LoanServer) CheckClientStatus(ctx context.Context, client *proto.Client) (*proto.LoanInfo, error){
+func (s *LoanServer) CheckClientStatus(ctx context.Context, client *proto.Client) (*proto.LoanInfo, error) {
 	var loan Loan
 
 	conn.First(&loan, "user_id = ?", client.Id)
 
 	return &proto.LoanInfo{
-		Id : int32(loan.ID),
+		Id:     int32(loan.ID),
 		Amount: int32(loan.Amount),
 		PayDay: loan.PayDay.Unix(),
 	}, nil
 }
 
-func (s *LoanServer) PayLoan(ctx context.Context, client *proto.Client) (*proto.OperationMsg, error){
+func (s *LoanServer) PayLoan(ctx context.Context, client *proto.Client) (*proto.OperationMsg, error) {
 	var loan Loan
-	if !conn.First(&loan, "user_id = ?", client.Id).RecordNotFound(){
+	if !conn.First(&loan, "user_id = ?", client.Id).RecordNotFound() {
 		conn.Delete(&loan)
 
 		return &proto.OperationMsg{
@@ -160,7 +159,7 @@ func main() {
 	err = grpcServer.Serve(lis)
 
 	fmt.Println("Served GRPC server")
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
